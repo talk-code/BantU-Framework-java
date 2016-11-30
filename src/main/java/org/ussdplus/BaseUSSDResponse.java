@@ -1,6 +1,6 @@
 package org.ussdplus;
 
-import org.emerjoin.orbitussd.*;
+import org.ussdplus.*;
 
 /**
  * @author Mário Júnior
