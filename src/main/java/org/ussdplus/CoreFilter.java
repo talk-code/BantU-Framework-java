@@ -66,7 +66,7 @@ public class CoreFilter implements USSDFilter {
                                    USSDSession session, USSDResponse response){
 
         if(currentWindow==null)
-            throw new RuntimeException(String.format("Window with name %s could not be found",currentWindowName));//TODO: Create custom exception
+            throw new WindowNotFoundException(currentWindowName);
 
 
         //Execute menu providers

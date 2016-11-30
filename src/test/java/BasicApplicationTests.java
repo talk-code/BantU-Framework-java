@@ -340,7 +340,7 @@ public class BasicApplicationTests {
     }
 
 
-    @Test(expected = RuntimeException.class)
+    @Test(expected = WindowNotFoundException.class)
     public void exceptionMustBeThrownIfTargetWindowOfMenuCouldNotBeFound(){
 
         USSDApplication application = new BaseUSSDApplication();
