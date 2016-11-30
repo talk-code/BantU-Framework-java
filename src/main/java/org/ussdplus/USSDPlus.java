@@ -7,7 +7,7 @@ import java.util.Queue;
 /**
  * @author Mário Júnior
  */
-public class OrbitUSSD {
+public class USSDPlus {
 
     private static CoreFilter coreFilter = null;
     private static MenuIndexer menuIndexer;
@@ -27,7 +27,7 @@ public class OrbitUSSD {
 
     public static void setWindowRenderer(WindowRenderer windowRenderer){
 
-        OrbitUSSD.windowRenderer = windowRenderer;
+        USSDPlus.windowRenderer = windowRenderer;
 
     }
 

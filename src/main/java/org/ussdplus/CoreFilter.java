@@ -73,7 +73,7 @@ public class CoreFilter implements USSDFilter {
         getMenuItemsFromProviders(currentWindow,request,session);
 
         //Index each of the non indexed menu items
-        OrbitUSSD.getMenuIndexer().index(currentWindow.getMenuItems());
+        USSDPlus.getMenuIndexer().index(currentWindow.getMenuItems());
 
         response.setSession(session);
         response.setWindow(currentWindow);

@@ -45,7 +45,7 @@ public class BaseUSSDRequest implements USSDRequest {
         session.setCurrentWindow(windowName);
         session.saveSession();
 
-        USSDResponse ussdResponse =  OrbitUSSD.executeRequest(application,this,session);
+        USSDResponse ussdResponse =  USSDPlus.executeRequest(application,this,session);
         response.setWindow(ussdResponse.getWindow());
         response.setResponseType(ussdResponse.getResponseType());
         response.setSession(ussdResponse.getSession());

@@ -145,7 +145,7 @@ public class BasicApplicationTests {
 
         ussdSession = new BaseUSSDSession();
         USSDRequest request = new BaseUSSDRequest();
-        USSDResponse response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("login",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
 
@@ -158,7 +158,7 @@ public class BasicApplicationTests {
         USSDRequest request = new BaseUSSDRequest();
         request.setInputValue("1111");
 
-        USSDResponse response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("recoverPassword",response.getWindow().getId());
         assertEquals(ResponseType.MESSAGE,response.getResponseType());
 
@@ -172,7 +172,7 @@ public class BasicApplicationTests {
         USSDRequest request = new BaseUSSDRequest();
         request.setInputValue("1234");
 
-        USSDResponse response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
 
@@ -186,22 +186,22 @@ public class BasicApplicationTests {
         USSDRequest request = new BaseUSSDRequest();
         request.setInputValue("1234");
 
-        USSDResponse response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request.setInputValue("1");
 
-        response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("transferences",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request.setInputValue("2");
 
-        response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("amountWindow",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request.setInputValue("-1000");
 
-        response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("invalidAmount",response.getWindow().getId());
         assertEquals(ResponseType.MESSAGE,response.getResponseType());
 
@@ -215,22 +215,22 @@ public class BasicApplicationTests {
         USSDRequest request = new BaseUSSDRequest();
         request.setInputValue("1234");
 
-        USSDResponse response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request.setInputValue("1");
 
-        response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("transferences",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request.setInputValue("2");
 
-        response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("amountWindow",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request.setInputValue("1000");
 
-        response = OrbitUSSD.executeRequest(getTestApp1(),request);
+        response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("requestSubmitted",response.getWindow().getId());
         assertEquals(ResponseType.MESSAGE,response.getResponseType());
 
@@ -281,7 +281,7 @@ public class BasicApplicationTests {
 
 
         USSDRequest request = new BaseUSSDRequest();
-        USSDResponse response = OrbitUSSD.executeRequest(application,request);
+        USSDResponse response = USSDPlus.executeRequest(application,request);
         assertEquals("Modified by another window filter",response.getWindow().getMessages().get(0).getContent());
 
 
@@ -334,7 +334,7 @@ public class BasicApplicationTests {
         application.setStartupWindowId("main");
 
         USSDRequest request = new BaseUSSDRequest();
-        USSDResponse response = OrbitUSSD.executeRequest(application,request);
+        USSDResponse response = USSDPlus.executeRequest(application,request);
         assertEquals("I'm the third window",response.getWindow().getMessages().get(0).getContent());
 
     }
@@ -357,35 +357,154 @@ public class BasicApplicationTests {
                         .build());
 
 
+        final USSDSession session_ = new BaseUSSDSession();
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                execution.proceed(request,session_,response);
+
+            }
+        });
+
+
         application.addWindow(mainWindow);
         application.setStartupWindowId("main");
 
         USSDRequest request = new BaseUSSDRequest();
         request.setInputValue("1");
-        OrbitUSSD.executeRequest(application,request);
+        USSDPlus.executeRequest(application,request);
 
 
     }
+
+    @Test(expected = WindowNotFoundException.class)
+    public void exceptionMustBeThrownIfStarupWindowCouldNotBeFound(){
+
+        USSDApplication application = new BaseUSSDApplication();
+        Window mainWindow = new Window("main");
+        mainWindow.addMessage(new Message("This wont be rendered"));
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                execution.proceed(request,new BaseUSSDSession(),response);
+
+            }
+        });
+
+
+        application.addWindow(mainWindow);
+        application.setStartupWindowId("maniac");
+
+        USSDRequest request = new BaseUSSDRequest();
+        USSDPlus.executeRequest(application,request);
+
+
+    }
+
 
 
     @Test(expected = SessionNotInitializedException.class)
     public void exceptionMustBeThrownIfUSSDSessionIsNull(){
 
+        USSDApplication application = new BaseUSSDApplication();
+        Window mainWindow = new Window("main");
+
+
+        application.addWindow(mainWindow);
+        application.setStartupWindowId("main");
+
+        USSDRequest request = new BaseUSSDRequest();
+        USSDPlus.executeRequest(application,request);
+
+    }
+
+
+    @Test
+    public void regExpMustFailAndRequestRedirectToErrorWindow(){
+
+        USSDApplication application = new BaseUSSDApplication();
+        Window mainWindow = new Window("main");
+        mainWindow.addMessage(new Message("Please type a value that matches the regular expression"));
+        mainWindow.setInput(new Input.Builder().withName("age").withRegExp("[0-9]","error-window").build());
+
+        final USSDSession _session = new BaseUSSDSession();
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                execution.proceed(request,_session,response);
+
+            }
+        });
+
+
+        Window errorWindow = new Window("error-window");
+        errorWindow.addMessage(new Message("Regular expression failed","error"));
+
+
+        application.addWindow(mainWindow);
+        application.addWindow(errorWindow);
+
+        application.setStartupWindowId("main");
+
+        USSDRequest request = new BaseUSSDRequest();
+        request.setInputValue("ab");
+
+        USSDResponse response = USSDPlus.executeRequest(application,request);
+        assertEquals("error-window",response.getWindow().getId());
+        assertEquals("error",response.getWindow().getMessages().get(0).getId());
+
+    }
+
+
+    @Test
+    public void regExpMustSucceedAndValueMustBeSavedInSession(){
+
+        USSDApplication application = new BaseUSSDApplication();
+        Window mainWindow = new Window("main");
+        mainWindow.addMessage(new Message("Please type a value that matches the regular expression"));
+        mainWindow.setInput(new Input.Builder().withName("age").withRegExp("[0-9]","error-window").build());
+
+        final USSDSession _session = new BaseUSSDSession();
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                execution.proceed(request,_session,response);
+
+            }
+        });
+
+
+        application.addWindow(mainWindow);
+        application.setStartupWindowId("main");
+
+        USSDRequest request = new BaseUSSDRequest();
+        request.setInputValue("9");
+
+        USSDResponse response = USSDPlus.executeRequest(application,request);
+        assertTrue(response.getSession().containsKey("age"));
+        assertEquals("9",response.getSession().get("age").toString());
+
+    }
+
+
+    @Test
+    public void inputValueWithoutRegExpMustBeFoundInSession(){
+
 
 
     }
 
 
     @Test
-    public void regexpMustFailAndRequestRedirectToErrorWindow(){
-
-
-
-    }
-
-
-    @Test
-    public void inputValueMustBeFoundInSession(){
+    public void messageMustBeRenderedWithSessionValues(){
 
 
 

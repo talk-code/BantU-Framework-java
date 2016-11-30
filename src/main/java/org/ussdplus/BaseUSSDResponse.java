@@ -37,7 +37,7 @@ public class BaseUSSDResponse implements USSDResponse {
 
     public String toString(){
 
-        return OrbitUSSD.getWindowRenderer().render(getWindow(),this);
+        return USSDPlus.getWindowRenderer().render(getWindow(),this);
 
     }
 
