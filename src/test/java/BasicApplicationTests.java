@@ -291,13 +291,85 @@ public class BasicApplicationTests {
     @Test
     public void globalFilterMustBeInvoked(){
 
+        USSDApplication application = new BaseUSSDApplication();
+        Window mainWindow = new Window("main");
+        mainWindow.addMessage(new Message("I'm the main window"));
+        mainWindow.setInput(new Input.Builder().withName("something").build());
+
+        Window secondWindow = new Window("second");
+        secondWindow.addMessage(new Message("I'm the second window"));
+
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                execution.proceed(request,new BaseUSSDSession(),response);
+
+            }
+        });
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                session.setCurrentWindow("second");
+                execution.proceed(request,session,response);
+
+            }
+        });
+
+        application.addFilter(new USSDFilter() {
+
+            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                execution.proceed(request,session,response);
+                response.getWindow().getMessages().get(0).setContent("I'm the third window");
+
+            }
+        });
+
+        application.addWindow(mainWindow);
+        application.addWindow(secondWindow);
+        application.setStartupWindowId("main");
+
+        USSDRequest request = new BaseUSSDRequest();
+        USSDResponse response = OrbitUSSD.executeRequest(application,request);
+        assertEquals("I'm the third window",response.getWindow().getMessages().get(0).getContent());
+
+    }
+
+
+    @Test(expected = RuntimeException.class)
+    public void exceptionMustBeThrownIfTargetWindowOfMenuCouldNotBeFound(){
+
+        USSDApplication application = new BaseUSSDApplication();
+        Window mainWindow = new Window("main");
+        mainWindow.addMessage(new Message("Hello. Please select an option"));
+        mainWindow.addMenuItem(
+                new MenuItem.Builder().withDescription("First")
+                .withTargetWindow("future-window")
+                .build());
+
+        mainWindow.addMenuItem(
+                new MenuItem.Builder().withDescription("Second")
+                        .withTargetWindow("present-window")
+                        .build());
+
+
+        application.addWindow(mainWindow);
+        application.setStartupWindowId("main");
+
+        USSDRequest request = new BaseUSSDRequest();
+        request.setInputValue("1");
+        OrbitUSSD.executeRequest(application,request);
 
 
     }
 
 
-    @Test
-    public void targetWindowMustNotBeFound(){
+    @Test(expected = SessionNotInitializedException.class)
+    public void exceptionMustBeThrownIfUSSDSessionIsNull(){
 
 
 
