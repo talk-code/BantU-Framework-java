@@ -10,6 +10,9 @@ import java.util.regex.Pattern;
  */
 public class CoreFilter implements USSDFilter {
 
+    private String currentWindowName;
+    private Window currentWindow;
+
     public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain chain) {
 
         if(session==null)
@@ -18,7 +21,7 @@ public class CoreFilter implements USSDFilter {
                             USSDSession.class.getSimpleName()));
 
 
-        String currentWindowName = session.getCurrentWindow();
+        currentWindowName = session.getCurrentWindow();
         if(currentWindowName==null){
 
             //Set the current window
@@ -28,20 +31,83 @@ public class CoreFilter implements USSDFilter {
         }
 
 
-        Window currentWindow = request.getApplication().getWindow(currentWindowName);
+        currentWindow = request.getApplication().getWindow(currentWindowName);
 
         List<USSDFilter> windowFilters =  request.getApplication().getWindowFilters(session.getCurrentWindow());
         if(windowFilters.size()>0){
 
-            //Append the window filters to the filter chain
+            //Append each window filters to the filter chain
             for(USSDFilter filter: windowFilters)
                 chain.appendFilter(filter);
 
+            //Add this filter to the end of the filters chain
+            chain.appendFilter(new USSDFilter() {
+
+                public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
+
+                    proceedProcessing(request,session,response);
+
+                }
+            });
+
             chain.proceed(request,session,response);
+
+            return;
 
 
         }
 
+        proceedProcessing(request,session,response);
+/*
+        if(currentWindow==null)
+            throw new RuntimeException(String.format("Window with name %s could not be found",currentWindowName));//TODO: Create custom exception
+
+
+        //Execute menu providers
+        getMenuItemsFromProviders(currentWindow,request,session);
+
+        //Index each of the non indexed menu items
+        OrbitUSSD.getMenuIndexer().index(currentWindow.getMenuItems());
+
+        response.setSession(session);
+        response.setWindow(currentWindow);
+
+
+        boolean proceed = true;
+
+        //Input and Menus can only be matched if the request comes with an input, which
+        //also means that processors execution is dependent on that
+        if(request.getInputValue()!=null) {
+
+            //Match input regular expression and put the value on session or redirect
+
+            proceed = !matchMenuItemsAndRedirect(currentWindow, request, session, response);
+
+            if(proceed){
+
+                if (currentWindow.getInput() != null)
+                    proceed = matchInput(currentWindow, request, session, response);
+
+            }
+
+            //Execute the processor
+            if(proceed) {
+
+                USSDProcessor processor = currentWindow.getProcessor();
+                if (processor != null)
+                    processor.process(request, session, response);
+
+            }
+
+        }*/
+
+        session.saveSession();//Session will always be persisted
+
+
+    }
+
+    private void proceedProcessing(USSDRequest request,
+                                   USSDSession session, USSDResponse response){
 
         if(currentWindow==null)
             throw new RuntimeException(String.format("Window with name %s could not be found",currentWindowName));//TODO: Create custom exception

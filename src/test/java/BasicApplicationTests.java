@@ -1,4 +1,3 @@
-import org.emerjoin.orbitussd.*;
 import org.ussdplus.*;
 import org.junit.Test;
 
@@ -270,21 +269,20 @@ public class BasicApplicationTests {
 
             public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain chain) {
 
-
                 chain.proceed(request,session,response);
-                response.getWindow().addMessage(new Message("Added by the window filter"));
+                response.getWindow().getMessages().get(0).setContent("Added by the window filter");
 
             }
 
         });
 
+        application.addWindow(window);
         application.setStartupWindowId("startup");
 
 
         USSDRequest request = new BaseUSSDRequest();
         USSDResponse response = OrbitUSSD.executeRequest(application,request);
         assertEquals("Modified by another window filter",response.getWindow().getMessages().get(0).getContent());
-
 
 
     }
