@@ -22,4 +22,6 @@ public interface USSDSession extends Map<String,Object> {
 
     void setCurrentWindow(String windowName);
 
+    void close();
+
 }

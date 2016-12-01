@@ -39,7 +39,7 @@ public class BaseUSSDSession extends HashMap<String,Object> implements USSDSessi
 
     public void saveSession() {
 
-
+        //TODO: Implement
 
     }
 
@@ -52,6 +52,12 @@ public class BaseUSSDSession extends HashMap<String,Object> implements USSDSessi
     public void setCurrentWindow(String windowName) {
 
         this.currentWindow = windowName;
+
+    }
+
+    public void close() {
+
+        //TODO: Implement
 
     }
 }
