@@ -3,7 +3,7 @@ package org.ussdplus;
 /**
  * @author Mário Júnior
  */
-public class MenuItem extends AbstractIdentifiable {
+public class MenuItem extends AbstractRenderableItem {
 
     private String description;
     private String value;

@@ -3,7 +3,7 @@ package org.ussdplus;
 /**
  * @author Mário Júnior
  */
-public class Message extends AbstractIdentifiable {
+public class Message extends AbstractRenderableItem {
 
     private String content;
 
