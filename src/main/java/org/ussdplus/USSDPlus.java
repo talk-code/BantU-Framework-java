@@ -54,6 +54,21 @@ public class USSDPlus {
     protected static USSDResponse executeRequest(USSDApplication application, USSDRequest request, USSDSession session){
 
         USSDResponse ussdResponse = new BaseUSSDResponse();
+        USSDSession ussdSession = session;
+
+
+        if(ussdSession==null){
+
+            SessionProvider sessionProvider = application.getSessionProvider();
+            if(sessionProvider==null)
+                throw new IllegalStateException(String.format("The %s instance must not be null",SessionProvider.class.getSimpleName()));
+
+            ussdSession = sessionProvider.getSession(request);
+            if(ussdSession==null)
+                throw new NullPointerException(String.format("The %s instance returned by %s must not be null",
+                        USSDSession.class.getSimpleName(),SessionProvider.class.getSimpleName()));
+
+        }
 
         request.setApplication(application);
 
@@ -66,7 +81,7 @@ public class USSDPlus {
         USSDFilteringChain chain = createFilteringChain(application);
 
         //Call the filters chain
-        chain.proceed(request,session,ussdResponse);
+        chain.proceed(request,ussdSession,ussdResponse);
 
 
         if(ussdResponse.getWindow().isForm())
@@ -115,5 +130,6 @@ public class USSDPlus {
         return null;
 
     }
+
 
 }

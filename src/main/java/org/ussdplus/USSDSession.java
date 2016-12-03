@@ -5,8 +5,9 @@ import java.util.Map;
 /**
  * @author Mário Júnior
  */
-public interface USSDSession extends Map<String,Object> {
+public interface USSDSession<IdType extends Object> extends Map<String,Object> {
 
+    public IdType getId();
     public double getDouble(String key);
     public boolean is(String key);
     public boolean getBoolean(String key);
@@ -21,6 +22,10 @@ public interface USSDSession extends Map<String,Object> {
     String getCurrentWindow();
 
     void setCurrentWindow(String windowName);
+
+    void setPreviousWindow(String windowName);
+
+    String getPreviousWindow(String windowName);
 
     void close();
 

@@ -15,10 +15,6 @@ public class CoreFilter implements USSDFilter {
 
     public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain chain) {
 
-        if(session==null)
-            throw new SessionNotInitializedException();
-
-
         currentWindowName = session.getCurrentWindow();
         if(currentWindowName==null){
 
@@ -83,29 +79,38 @@ public class CoreFilter implements USSDFilter {
 
         //Input and Menus can only be matched if the request comes with an input, which
         //also means that processors execution is dependent on that
-        if(request.getInputValue()!=null) {
+        if(request instanceof PostRequest) {
 
-            //Match input regular expression and put the value on session or redirect
+            PostRequest postRequest = (PostRequest) request;
 
-            proceed = !matchMenuItemsAndRedirect(currentWindow, request, session, response);
+            if (postRequest.getInputValue() != null) {
 
-            if(proceed){
+                //Match input regular expression and put the value on session or redirect
+                proceed = !matchMenuItemsAndRedirect(currentWindow, postRequest, session, response);
 
-                if (currentWindow.getInput() != null)
-                    proceed = matchInput(currentWindow, request, session, response);
+                if(proceed){
 
-            }
+                    if (currentWindow.getInput() != null)
+                        proceed = matchInput(currentWindow, postRequest, session, response);
 
-            //Execute the processor
-            if(proceed) {
+                }
 
-                USSDProcessor processor = currentWindow.getProcessor();
-                if (processor != null)
-                    processor.process(request, session, response);
+
+                //Execute the processor
+                if (proceed) {
+
+                    USSDProcessor processor = currentWindow.getProcessor();
+                    if (processor != null)
+                        processor.process(request, session, response);
+
+                }
+
 
             }
 
         }
+
+
 
         session.saveSession();//Session will always be persisted
 
@@ -117,7 +122,6 @@ public class CoreFilter implements USSDFilter {
 
         Pattern pattern = Pattern.compile(regexp);
         Matcher matcher = pattern.matcher(value);
-        request.setInputRegexpMatcher(matcher);
         return matcher.matches();
 
     }
@@ -136,7 +140,7 @@ public class CoreFilter implements USSDFilter {
     }
 
 
-    private boolean matchInput(Window currentWindow, USSDRequest request, USSDSession session, USSDResponse response){
+    private boolean matchInput(Window currentWindow, PostRequest request, USSDSession session, USSDResponse response){
 
         Input input = currentWindow.getInput();
         String value = request.getInputValue();
@@ -162,7 +166,7 @@ public class CoreFilter implements USSDFilter {
     }
 
 
-    private boolean matchMenuItemsAndRedirect(Window currentWindow,USSDRequest request, USSDSession session, USSDResponse response){
+    private boolean matchMenuItemsAndRedirect(Window currentWindow,PostRequest request, USSDSession session, USSDResponse response){
 
         //Match the menu Items with the request value
         for(MenuItem menuItem: currentWindow.getMenuItems()){

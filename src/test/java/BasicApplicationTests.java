@@ -1,3 +1,4 @@
+import org.junit.Before;
 import org.ussdplus.*;
 import org.junit.Test;
 
@@ -12,7 +13,7 @@ import static org.junit.Assert.*;
  */
 public class BasicApplicationTests {
 
-    private static USSDSession ussdSession = new BaseUSSDSession();
+    private static final String TEST_BASE_CODE ="*181#";
 
     private static USSDApplication getTestApp1(){
 
@@ -120,19 +121,8 @@ public class BasicApplicationTests {
         application.addWindow(invalidAmountWindow);
         application.addWindow(requestSubmittedWindow);
         application.addWindow(recoverPasswordWindow);
+        application.activateBaseCode(TEST_BASE_CODE);
 
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                if(session==null) {
-                    execution.proceed(request, ussdSession, response);
-                }else {
-                    execution.proceed(request, session, response);
-                }
-
-            }
-        });
 
         application.setStartupWindowId("login");
         return application;
@@ -140,23 +130,36 @@ public class BasicApplicationTests {
     }
 
 
+
+    @Before
+    public void wipeSession(){
+
+        USSDRequest request = getTestApp1().newRequest(TEST_BASE_CODE);
+        fillRequestAndGetSession(request,getTestApp1()).close();
+
+    }
+
     @Test
     public void mustRenderLoginWindow(){
 
-        ussdSession = new BaseUSSDSession();
-        USSDRequest request = new BaseUSSDRequest();
+
+        USSDRequest request = getTestApp1().newRequest(TEST_BASE_CODE);
+        fillRequest(request);
         USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("login",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
 
     }
 
+
+
     @Test
     public void mustRenderPasswordRecoverWindow(){
 
-        ussdSession.setCurrentWindow("login");
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("1111");
+        USSDRequest request = getTestApp1().newRequest("1111");
+
+        USSDApplication app = getTestApp1();
+        fillRequestAndGetSession(request,app).setCurrentWindow("login");
 
         USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("recoverPassword",response.getWindow().getId());
@@ -165,13 +168,13 @@ public class BasicApplicationTests {
     }
 
 
+
+
     @Test
     public void mustRenderOperationsWindow(){
 
-        ussdSession.setCurrentWindow("login");
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("1234");
-
+        USSDRequest request = getTestApp1().newRequest("1234");
+        fillRequest(request);
         USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
@@ -179,27 +182,31 @@ public class BasicApplicationTests {
     }
 
 
+
     @Test
     public void mustRenderInvalidAmountWindow(){
 
-        ussdSession.setCurrentWindow("login");
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("1234");
+        USSDApplication app = getTestApp1();
+        USSDRequest request = app.newRequest("1234");
+        fillRequestAndGetSession(request,app).setCurrentWindow("login");
 
-        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
+        USSDResponse response = USSDPlus.executeRequest(app,request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
-        request.setInputValue("1");
+        request = app.newRequest("1");
+        fillRequest(request);
 
         response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("transferences",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
-        request.setInputValue("2");
+        request = app.newRequest("2");
+        fillRequest(request);
 
         response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("amountWindow",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
-        request.setInputValue("-1000");
+        request = app.newRequest("-1000");
+        fillRequest(request);
 
         response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("invalidAmount",response.getWindow().getId());
@@ -211,24 +218,27 @@ public class BasicApplicationTests {
     @Test
     public void mustRenderRequestSubmittedWindow(){
 
-        ussdSession.setCurrentWindow(null);
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("1234");
+        USSDApplication app = getTestApp1();
+        USSDRequest request = app.newRequest("1234");
+        fillRequest(request);
 
         USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
-        request.setInputValue("1");
+        request = app.newRequest("1");
+        fillRequest(request);
 
         response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("transferences",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
-        request.setInputValue("2");
+        request = app.newRequest("2");
+        fillRequest(request);
 
         response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("amountWindow",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
-        request.setInputValue("1000");
+        request = app.newRequest("1000");
+        fillRequest(request);
 
         response = USSDPlus.executeRequest(getTestApp1(),request);
         assertEquals("requestSubmitted",response.getWindow().getId());
@@ -244,15 +254,6 @@ public class BasicApplicationTests {
         Window window = new Window("startup");
         window.addMessage(new Message("Welcome, please type something"));
         window.setInput(new Input.Builder().withName("something").build());
-
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                execution.proceed(request,new BaseUSSDSession(),response);
-
-            }
-        });
 
         application.addWindowFilter("startup", new USSDFilter() {
 
@@ -280,7 +281,8 @@ public class BasicApplicationTests {
         application.setStartupWindowId("startup");
 
 
-        USSDRequest request = new BaseUSSDRequest();
+        USSDRequest request = application.newRequest(TEST_BASE_CODE);
+        fillRequest(request);
         USSDResponse response = USSDPlus.executeRequest(application,request);
         assertEquals("Modified by another window filter",response.getWindow().getMessages().get(0).getContent());
 
@@ -298,16 +300,6 @@ public class BasicApplicationTests {
 
         Window secondWindow = new Window("second");
         secondWindow.addMessage(new Message("I'm the second window"));
-
-
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                execution.proceed(request,new BaseUSSDSession(),response);
-
-            }
-        });
 
         application.addFilter(new USSDFilter() {
 
@@ -333,7 +325,8 @@ public class BasicApplicationTests {
         application.addWindow(secondWindow);
         application.setStartupWindowId("main");
 
-        USSDRequest request = new BaseUSSDRequest();
+        USSDRequest request = application.newRequest(TEST_BASE_CODE);
+        fillRequest(request);
         USSDResponse response = USSDPlus.executeRequest(application,request);
         assertEquals("I'm the third window",response.getWindow().getMessages().get(0).getContent());
 
@@ -357,23 +350,11 @@ public class BasicApplicationTests {
                         .build());
 
 
-        final USSDSession session_ = new BaseUSSDSession();
-
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                execution.proceed(request,session_,response);
-
-            }
-        });
-
-
         application.addWindow(mainWindow);
         application.setStartupWindowId("main");
 
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("1");
+        USSDRequest request = application.newRequest("1");
+        fillRequest(request);
         USSDPlus.executeRequest(application,request);
 
 
@@ -386,41 +367,16 @@ public class BasicApplicationTests {
         Window mainWindow = new Window("main");
         mainWindow.addMessage(new Message("This wont be rendered"));
 
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                execution.proceed(request,new BaseUSSDSession(),response);
-
-            }
-        });
-
-
         application.addWindow(mainWindow);
         application.setStartupWindowId("maniac");
 
-        USSDRequest request = new BaseUSSDRequest();
+        USSDRequest request = application.newRequest(TEST_BASE_CODE);
+        fillRequest(request);
         USSDPlus.executeRequest(application,request);
 
 
     }
 
-
-
-    @Test(expected = SessionNotInitializedException.class)
-    public void exceptionMustBeThrownIfUSSDSessionIsNull(){
-
-        USSDApplication application = new BaseUSSDApplication();
-        Window mainWindow = new Window("main");
-
-
-        application.addWindow(mainWindow);
-        application.setStartupWindowId("main");
-
-        USSDRequest request = new BaseUSSDRequest();
-        USSDPlus.executeRequest(application,request);
-
-    }
 
 
     @Test
@@ -430,17 +386,6 @@ public class BasicApplicationTests {
         Window mainWindow = new Window("main");
         mainWindow.addMessage(new Message("Please type a value that matches the regular expression"));
         mainWindow.setInput(new Input.Builder().withName("age").withRegExp("[0-9]","error-window").build());
-
-        final USSDSession _session = new BaseUSSDSession();
-
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                execution.proceed(request,_session,response);
-
-            }
-        });
 
 
         Window errorWindow = new Window("error-window");
@@ -452,14 +397,15 @@ public class BasicApplicationTests {
 
         application.setStartupWindowId("main");
 
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("ab");
+        USSDRequest request = application.newRequest("ab");
+        fillRequest(request);
 
         USSDResponse response = USSDPlus.executeRequest(application,request);
         assertEquals("error-window",response.getWindow().getId());
         assertEquals("error",response.getWindow().getMessages().get(0).getId());
 
     }
+
 
 
     @Test
@@ -470,23 +416,11 @@ public class BasicApplicationTests {
         mainWindow.addMessage(new Message("Please type a value that matches the regular expression"));
         mainWindow.setInput(new Input.Builder().withName("age").withRegExp("[0-9]","error-window").build());
 
-        final USSDSession _session = new BaseUSSDSession();
-
-        application.addFilter(new USSDFilter() {
-
-            public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
-
-                execution.proceed(request,_session,response);
-
-            }
-        });
-
-
         application.addWindow(mainWindow);
         application.setStartupWindowId("main");
 
-        USSDRequest request = new BaseUSSDRequest();
-        request.setInputValue("9");
+        USSDRequest request = application.newRequest("9");
+        fillRequest(request);
 
         USSDResponse response = USSDPlus.executeRequest(application,request);
         assertTrue(response.getSession().containsKey("age"));
@@ -503,10 +437,29 @@ public class BasicApplicationTests {
     }
 
 
+
+
+
+
     @Test
     public void messageMustBeRenderedWithSessionValues(){
 
 
+
+    }
+
+    private void fillRequest(USSDRequest request){
+
+        request.setMSISDN("+258842538083");
+        //TODO: Set more stuff
+
+
+    }
+
+    private USSDSession fillRequestAndGetSession(USSDRequest request, USSDApplication app){
+
+        fillRequest(request);
+        return app.getSessionProvider().getSession(request);
 
     }
 

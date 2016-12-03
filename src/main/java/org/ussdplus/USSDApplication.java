@@ -1,5 +1,6 @@
 package org.ussdplus;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -23,5 +24,15 @@ public interface USSDApplication {
 
     Window getWindow(String windowId);
 
+    USSDRequest newRequest(String string);
+    USSDRequest newTimeoutRequest();
+    USSDRequest newReleaseRequest();
+
+    SessionProvider getSessionProvider();
+    void setSessionProvider(SessionProvider provider);
+
+    Collection<String> getBaseCodes();
+    void activateBaseCode(String code);
+    boolean canRun(String code);
 
 }

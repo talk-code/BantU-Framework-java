@@ -7,17 +7,22 @@ import java.util.regex.Matcher;
  */
 public interface USSDRequest {
 
-    String getInputValue();
+    String getMSISDN();
 
-    void setInputValue(String inputValue);
+    void setMSISDN(String MSISDN);
 
-    String getUSSDIN();
+    String getMCC();
+    void setMCC(String value);
 
-    void setUSSDIN(String USSDIN);
+    String getCID();
+    void setCID(String value);
 
-    String getUssdCode();
+    String getLAC();
+    void setLAC(String value);
 
-    void setUssdCode(String ussdCode);
+    void setAttachment(Object attachment);
+    <T> T getAttachment(Class<T> tClass);
+    Object getAttachment();
 
     /**
      * Request input values is set to null
@@ -30,10 +35,6 @@ public interface USSDRequest {
     void setApplication(USSDApplication application);
 
     USSDApplication getApplication();
-
-    Matcher getInputRegexpMatcher();
-
-    void setInputRegexpMatcher(Matcher matcher);
 
 
 }

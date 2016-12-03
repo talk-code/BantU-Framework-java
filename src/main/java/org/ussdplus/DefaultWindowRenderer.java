@@ -27,10 +27,11 @@ public class DefaultWindowRenderer implements WindowRenderer {
         String preFinal = builder.toString();
 
         USSDSession session = response.getSession();
-        for(String key:session.keySet()){
+
+        for(Object key:session.keySet()){
 
             Object value = session.get(key);
-            preFinal = preFinal.replaceAll("\\{\\{"+key+"\\}\\}",value.toString()); //TODO: Fix this
+            preFinal = preFinal.replaceAll("\\{\\{"+key.toString()+"\\}\\}",value.toString()); //TODO: Fix this
 
         }
 

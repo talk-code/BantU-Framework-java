@@ -5,6 +5,9 @@ package org.ussdplus;
  */
 public interface USSDResponse  {
 
+    String OK_STATUS="OK";
+    String ERROR_STATUS="ERROR";
+
     Window getWindow();
 
     void setWindow(Window window);
@@ -16,5 +19,8 @@ public interface USSDResponse  {
     USSDSession getSession();
 
     void setSession(USSDSession session);
+
+    String getStatus();
+    void setStatus(String value);
 
 }
