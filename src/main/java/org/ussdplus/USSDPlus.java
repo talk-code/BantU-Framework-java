@@ -84,10 +84,18 @@ public class USSDPlus {
         chain.proceed(request,ussdSession,ussdResponse);
 
 
-        if(ussdResponse.getWindow().isForm())
-            ussdResponse.setResponseType(ResponseType.FORM);
-        else
+        if(request instanceof GetRequest || request instanceof PostRequest) {
+
+            if (ussdResponse.getWindow().isForm())
+                ussdResponse.setResponseType(ResponseType.FORM);
+            else
+                ussdResponse.setResponseType(ResponseType.MESSAGE);
+
+        }else{
+
             ussdResponse.setResponseType(ResponseType.MESSAGE);
+
+        }
 
 
         //Return the produced USSDResponse
