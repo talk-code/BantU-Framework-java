@@ -1,5 +1,5 @@
 import org.junit.Before;
-import org.ussdplus.*;
+import org.bantu.*;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,6 +36,8 @@ public class BasicApplicationTests {
                     request.redirectTo("operations", session, response);
                 else
                     request.redirectTo("recoverPassword", session, response);
+
+
 
 
 
@@ -288,6 +290,8 @@ public class BasicApplicationTests {
 
 
     }
+
+
 
 
     @Test
