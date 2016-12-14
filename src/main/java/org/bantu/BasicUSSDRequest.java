@@ -76,12 +76,32 @@ public abstract class BasicUSSDRequest implements USSDRequest {
 
     }
 
-    protected void keepNavigationHistory(USSDSession session, String targetWindow){
 
-        session.setPreviousWindow(session.getCurrentWindow());
-        session.setCurrentWindow(targetWindow);
+
+    protected void delegateRequest(USSDRequest request, USSDSession session, USSDResponse response) {
+
+        USSDResponse ussdResponse =  BantU.executeRequest(getApplication(),request,session);
+        response.setWindow(ussdResponse.getWindow());
+        response.setResponseType(ussdResponse.getResponseType());
+        response.setSession(ussdResponse.getSession());
 
     }
+
+
+    protected GetRequest buildGetRequest(){
+
+        GetRequest getRequest = new BasicGetRequest();
+        getRequest.setMSISDN(getMSISDN());
+        getRequest.setApplication(getApplication());
+        getRequest.setAttachment(getAttachment());
+        getRequest.setCID(getCID());
+        getRequest.setLAC(getLAC());
+        getRequest.setMCC(getMCC());
+
+        return getRequest;
+
+    }
+
 
     public void setApplication(USSDApplication application) {
         this.application = application;
@@ -95,8 +115,10 @@ public abstract class BasicUSSDRequest implements USSDRequest {
 
         session.setPreviousWindow(session.getCurrentWindow());
         session.setCurrentWindow(windowName);
+        session.saveSession();
 
     }
+
 
 
 }

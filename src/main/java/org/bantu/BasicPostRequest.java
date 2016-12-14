@@ -18,22 +18,8 @@ public class BasicPostRequest extends BasicUSSDRequest implements PostRequest {
     public void redirectTo(String windowName, USSDSession session, USSDResponse response) {
         super.redirectTo(windowName,session,response);
 
-
-        session.setCurrentWindow(windowName);
-        session.saveSession();
-
-        GetRequest getRequest = new BasicGetRequest();
-        getRequest.setMSISDN(getMSISDN());
-        getRequest.setApplication(getApplication());
-        getRequest.setAttachment(getAttachment());
-        getRequest.setCID(getCID());
-        getRequest.setLAC(getLAC());
-        getRequest.setMCC(getMCC());
-
-        USSDResponse ussdResponse =  BantU.executeRequest(getApplication(),getRequest,session);
-        response.setWindow(ussdResponse.getWindow());
-        response.setResponseType(ussdResponse.getResponseType());
-        response.setSession(ussdResponse.getSession());
+        GetRequest getRequest = buildGetRequest();
+        delegateRequest(getRequest,session,response);
 
     }
 
