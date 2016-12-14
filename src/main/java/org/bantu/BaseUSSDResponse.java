@@ -9,6 +9,7 @@ public class BaseUSSDResponse implements USSDResponse {
     private ResponseType responseType;
     private USSDSession session;
     private String status = USSDResponse.OK_STATUS;
+    private String responseBody;
 
     protected BaseUSSDResponse(){
 
@@ -30,6 +31,17 @@ public class BaseUSSDResponse implements USSDResponse {
 
     public void setResponseType(ResponseType responseType) {
         this.responseType = responseType;
+    }
+
+    public void setResponseBody(String body) {
+
+        this.responseBody = body;
+
+    }
+
+    public String getResponseBody() {
+
+        return this.responseBody;
     }
 
     public USSDSession getSession() {
@@ -56,7 +68,15 @@ public class BaseUSSDResponse implements USSDResponse {
 
     public String toString(){
 
-        return USSDPlus.getWindowRenderer().render(getWindow(),this);
+        //Response window override
+        if(responseBody!=null)
+            return responseBody;
+
+        if(getWindow()!=null)
+            return USSDPlus.getWindowRenderer().render(getWindow(),this);
+
+        //This will avoid null pointer exception when debugger tries to exhibit a string representation for the object
+        return "";
 
     }
 

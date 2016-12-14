@@ -16,6 +16,10 @@ public interface USSDResponse  {
 
     void setResponseType(ResponseType responseType);
 
+    void setResponseBody(String body);
+
+    String getResponseBody();
+
     USSDSession getSession();
 
     void setSession(USSDSession session);
