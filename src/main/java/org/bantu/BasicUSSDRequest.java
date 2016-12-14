@@ -76,12 +76,26 @@ public abstract class BasicUSSDRequest implements USSDRequest {
 
     }
 
+    protected void keepNavigationHistory(USSDSession session, String targetWindow){
+
+        session.setPreviousWindow(session.getCurrentWindow());
+        session.setCurrentWindow(targetWindow);
+
+    }
+
     public void setApplication(USSDApplication application) {
         this.application = application;
     }
 
     public USSDApplication getApplication() {
         return application;
+    }
+
+    public void redirectTo(String windowName, USSDSession session, USSDResponse response) {
+
+        session.setPreviousWindow(session.getCurrentWindow());
+        session.setCurrentWindow(windowName);
+
     }
 
 

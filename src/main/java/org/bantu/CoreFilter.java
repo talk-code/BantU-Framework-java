@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
  */
 public class CoreFilter implements USSDFilter {
 
+    private static final String BACKWARD_TARGET_WINDOW="#backward";
 
     public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain chain) {
 
@@ -66,14 +67,14 @@ public class CoreFilter implements USSDFilter {
                                    String currentWindowName,Window currentWindow){
 
         if(currentWindow==null)
-            throw new WindowNotFoundException(currentWindowName);
+            throw new WindowNotFoundException(currentWindowName,request,response,session);
 
 
         //Execute menu providers
         getMenuItemsFromProviders(currentWindow,request,session);
 
         //Index each of the non indexed menu items
-        USSDPlus.getMenuIndexer().index(currentWindow.getMenuItems());
+        BantU.getMenuIndexer().index(currentWindow.getMenuItems());
 
         //response.setSession(session);
         response.setWindow(currentWindow);
@@ -183,10 +184,11 @@ public class CoreFilter implements USSDFilter {
                     session.put(currentWindow.getMenuValueName(), menuItem.getValue());
 
 
-
                 if(menuItem.getTargetWindow()!=null) {
 
-                    request.redirectTo(menuItem.getTargetWindow(), session, response);
+                    String windowId = whereToGo(menuItem,request,response,session);
+                    request.redirectTo(windowId, session, response);
+
                     return true;
 
                 }
@@ -200,4 +202,25 @@ public class CoreFilter implements USSDFilter {
         return false;
 
     }
+
+
+    private String  whereToGo(MenuItem menuItem,USSDRequest request, USSDResponse response, USSDSession session){
+
+        if(menuItem.getTargetWindow().equals(BACKWARD_TARGET_WINDOW)){
+
+            if(session.getPreviousWindow()==null)
+                throw new ImpossibleBackwardRedirectException(menuItem,request,response,session);
+
+            return session.getPreviousWindow();
+
+
+        }
+
+        return menuItem.getTargetWindow();
+
+    }
+
+
+
+
 }

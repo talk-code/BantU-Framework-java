@@ -73,7 +73,7 @@ public class BaseUSSDResponse implements USSDResponse {
             return responseBody;
 
         if(getWindow()!=null)
-            return USSDPlus.getWindowRenderer().render(getWindow(),this);
+            return BantU.getWindowRenderer().render(getWindow(),this);
 
         //This will avoid null pointer exception when debugger tries to exhibit a string representation for the object
         return "";

@@ -7,7 +7,7 @@ import java.util.Queue;
 /**
  * @author Mário Júnior
  */
-public class USSDPlus {
+public class BantU {
 
     private static CoreFilter coreFilter = null;
     private static MenuIndexer menuIndexer;
@@ -27,7 +27,7 @@ public class USSDPlus {
 
     public static void setWindowRenderer(WindowRenderer windowRenderer){
 
-        USSDPlus.windowRenderer = windowRenderer;
+        BantU.windowRenderer = windowRenderer;
 
     }
 

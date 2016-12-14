@@ -15,6 +15,7 @@ public class BasicGetRequest extends BasicUSSDRequest implements GetRequest {
     }
 
     public void redirectTo(String windowName, USSDSession session, USSDResponse response) {
+        super.redirectTo(windowName,session,response);
 
         session.setCurrentWindow(windowName);
         session.saveSession();
@@ -29,7 +30,7 @@ public class BasicGetRequest extends BasicUSSDRequest implements GetRequest {
         getRequest.setMCC(getMCC());
 
 
-        USSDResponse ussdResponse =  USSDPlus.executeRequest(getApplication(),getRequest,session);
+        USSDResponse ussdResponse =  BantU.executeRequest(getApplication(),getRequest,session);
         response.setWindow(ussdResponse.getWindow());
         response.setResponseType(ussdResponse.getResponseType());
         response.setSession(ussdResponse.getSession());

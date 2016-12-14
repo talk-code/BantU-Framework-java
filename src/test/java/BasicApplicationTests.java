@@ -147,7 +147,7 @@ public class BasicApplicationTests {
 
         USSDRequest request = getTestApp1().newRequest(TEST_BASE_CODE);
         fillRequest(request);
-        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
+        USSDResponse response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("login",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
 
@@ -163,7 +163,7 @@ public class BasicApplicationTests {
         USSDApplication app = getTestApp1();
         fillRequestAndGetSession(request,app).setCurrentWindow("login");
 
-        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
+        USSDResponse response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("recoverPassword",response.getWindow().getId());
         assertEquals(ResponseType.MESSAGE,response.getResponseType());
 
@@ -177,7 +177,7 @@ public class BasicApplicationTests {
 
         USSDRequest request = getTestApp1().newRequest("1234");
         fillRequest(request);
-        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
+        USSDResponse response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
 
@@ -192,25 +192,25 @@ public class BasicApplicationTests {
         USSDRequest request = app.newRequest("1234");
         fillRequestAndGetSession(request,app).setCurrentWindow("login");
 
-        USSDResponse response = USSDPlus.executeRequest(app,request);
+        USSDResponse response = BantU.executeRequest(app,request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request = app.newRequest("1");
         fillRequest(request);
 
-        response = USSDPlus.executeRequest(getTestApp1(),request);
+        response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("transferences",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request = app.newRequest("2");
         fillRequest(request);
 
-        response = USSDPlus.executeRequest(getTestApp1(),request);
+        response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("amountWindow",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request = app.newRequest("-1000");
         fillRequest(request);
 
-        response = USSDPlus.executeRequest(getTestApp1(),request);
+        response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("invalidAmount",response.getWindow().getId());
         assertEquals(ResponseType.MESSAGE,response.getResponseType());
 
@@ -224,25 +224,25 @@ public class BasicApplicationTests {
         USSDRequest request = app.newRequest("1234");
         fillRequest(request);
 
-        USSDResponse response = USSDPlus.executeRequest(getTestApp1(),request);
+        USSDResponse response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("operations",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request = app.newRequest("1");
         fillRequest(request);
 
-        response = USSDPlus.executeRequest(getTestApp1(),request);
+        response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("transferences",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request = app.newRequest("2");
         fillRequest(request);
 
-        response = USSDPlus.executeRequest(getTestApp1(),request);
+        response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("amountWindow",response.getWindow().getId());
         assertEquals(ResponseType.FORM,response.getResponseType());
         request = app.newRequest("1000");
         fillRequest(request);
 
-        response = USSDPlus.executeRequest(getTestApp1(),request);
+        response = BantU.executeRequest(getTestApp1(),request);
         assertEquals("requestSubmitted",response.getWindow().getId());
         assertEquals(ResponseType.MESSAGE,response.getResponseType());
 
@@ -285,7 +285,7 @@ public class BasicApplicationTests {
 
         USSDRequest request = application.newRequest(TEST_BASE_CODE);
         fillRequest(request);
-        USSDResponse response = USSDPlus.executeRequest(application,request);
+        USSDResponse response = BantU.executeRequest(application,request);
         assertEquals("Modified by another window filter",response.getWindow().getMessages().get(0).getContent());
 
 
@@ -331,7 +331,7 @@ public class BasicApplicationTests {
 
         USSDRequest request = application.newRequest(TEST_BASE_CODE);
         fillRequest(request);
-        USSDResponse response = USSDPlus.executeRequest(application,request);
+        USSDResponse response = BantU.executeRequest(application,request);
         assertEquals("I'm the third window",response.getWindow().getMessages().get(0).getContent());
 
     }
@@ -359,7 +359,7 @@ public class BasicApplicationTests {
 
         USSDRequest request = application.newRequest("1");
         fillRequest(request);
-        USSDPlus.executeRequest(application,request);
+        BantU.executeRequest(application,request);
 
 
     }
@@ -376,7 +376,7 @@ public class BasicApplicationTests {
 
         USSDRequest request = application.newRequest(TEST_BASE_CODE);
         fillRequest(request);
-        USSDPlus.executeRequest(application,request);
+        BantU.executeRequest(application,request);
 
 
     }
@@ -404,7 +404,7 @@ public class BasicApplicationTests {
         USSDRequest request = application.newRequest("ab");
         fillRequest(request);
 
-        USSDResponse response = USSDPlus.executeRequest(application,request);
+        USSDResponse response = BantU.executeRequest(application,request);
         assertEquals("error-window",response.getWindow().getId());
         assertEquals("error",response.getWindow().getMessages().get(0).getId());
 
@@ -426,7 +426,7 @@ public class BasicApplicationTests {
         USSDRequest request = application.newRequest("9");
         fillRequest(request);
 
-        USSDResponse response = USSDPlus.executeRequest(application,request);
+        USSDResponse response = BantU.executeRequest(application,request);
         assertTrue(response.getSession().containsKey("age"));
         assertEquals("9",response.getSession().get("age").toString());
 
@@ -436,9 +436,93 @@ public class BasicApplicationTests {
     @Test
     public void inputValueWithoutRegExpMustBeFoundInSession(){
 
+    }
 
+
+
+    @Test
+    public void previousWindowMustBeReturnedInResponse(){
+
+        USSDApplication application = new BaseUSSDApplication();
+
+        Window secondWindow = new Window("second");
+        secondWindow.addMessage(new Message("This is just a non sense window"));
+        secondWindow.addMenuItem(new MenuItem.Builder().withTargetWindow("#backward").withValue("0").build());
+
+        Window firstWindow = new Window("first");
+        firstWindow.addMessage(new Message("I'm the target of the backward menu item"));
+
+
+        application.addWindow(secondWindow);
+        application.addWindow(firstWindow);
+
+        application.setStartupWindowId("second");
+
+        USSDRequest request = application.newRequest("1");
+        fillRequest(request);
+        USSDSession session = application.getSessionProvider().getSession(request);
+        session.setPreviousWindow("first");
+
+        USSDResponse response = BantU.executeRequest(application,request);
+        assertEquals("first",response.getWindow().getId());
 
     }
+
+    @Test
+    public void backwardNavigationMustBeSuccessfull(){
+
+        USSDApplication application = new BaseUSSDApplication();
+
+        Window thirdWindow = new Window("third");
+        thirdWindow.addMessage(new Message("This is just a non sense window message"));
+        thirdWindow.addMenuItem(new MenuItem.Builder().withTargetWindow("#backward").withValue("0").build());
+
+        Window secondWindow = new Window("second");
+        secondWindow.addMessage(new Message("This is just a non sense window"));
+        secondWindow.addMenuItem(new MenuItem.Builder().withTargetWindow("third").build());
+
+        Window firstWindow = new Window("first");
+        firstWindow.addMessage(new Message("I'm the target of the backward menu item"));
+        firstWindow.addMenuItem(new MenuItem.Builder().withTargetWindow("second").build());
+
+
+        application.addWindow(thirdWindow);
+        application.addWindow(secondWindow);
+        application.addWindow(firstWindow);
+
+        application.setStartupWindowId("first");
+        USSDResponse response = null;
+
+        USSDRequest request = application.newRequest("1");
+        fillRequest(request);
+
+        BantU.executeRequest(application,request); //window: second
+        BantU.executeRequest(application,request); //window: third
+        response = BantU.executeRequest(application,request); //window: second
+
+        assertEquals("second",response.getWindow().getId());
+
+    }
+
+
+    @Test(expected = ImpossibleBackwardRedirectException.class)
+    public void backwardRedirectMustFail(){
+
+        USSDApplication application = new BaseUSSDApplication();
+
+        Window uniqueWindow = new Window("unique");
+        uniqueWindow.addMessage(new Message("This is just a non sense window message"));
+        uniqueWindow.addMenuItem(new MenuItem.Builder().withTargetWindow("#backward").withValue("0").build());
+
+        application.addWindow(uniqueWindow);
+
+        application.setStartupWindowId("unique");
+        USSDRequest request = application.newRequest("1");
+        fillRequest(request);
+        BantU.executeRequest(application,request);
+
+    }
+
 
 
 

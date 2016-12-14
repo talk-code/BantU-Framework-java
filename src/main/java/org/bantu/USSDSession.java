@@ -25,7 +25,7 @@ public interface USSDSession<IdType extends Object> extends Map<String,Object> {
 
     void setPreviousWindow(String windowName);
 
-    String getPreviousWindow(String windowName);
+    String getPreviousWindow();
 
     void close();
 

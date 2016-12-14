@@ -38,7 +38,7 @@ public abstract class BasicSession extends BaseUSSDSession<Long> {
 
     }
 
-    public String getPreviousWindow(String windowName) {
+    public String getPreviousWindow() {
 
         return this.previousWindow;
 
