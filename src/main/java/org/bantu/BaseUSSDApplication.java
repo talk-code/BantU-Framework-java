@@ -20,6 +20,8 @@ public class BaseUSSDApplication implements USSDApplication {
 
     private Map<String,Service> services = new HashMap<String, Service>();
 
+    private NavigationCache navigationCache;
+
     public BaseUSSDApplication(){
 
         this.sessionProvider =  new BasicSessionProvider();
@@ -178,6 +180,19 @@ public class BaseUSSDApplication implements USSDApplication {
 
     public boolean canRun(String code) {
         return baseCodes.containsKey(code);
+    }
+
+    public NavigationCache getNavigationCache() {
+
+        return navigationCache;
+
+
+    }
+
+    public void setNavigationCache(NavigationCache navigationCache) {
+
+        this.navigationCache = navigationCache;
+
     }
 
 }

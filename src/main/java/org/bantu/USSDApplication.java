@@ -40,4 +40,8 @@ public interface USSDApplication {
     void activateBaseCode(String code);
     boolean canRun(String code);
 
+    NavigationCache getNavigationCache();
+    void setNavigationCache(NavigationCache navigationCache);
+
+
 }

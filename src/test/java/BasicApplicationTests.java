@@ -1,10 +1,10 @@
+import com.sun.org.apache.regexp.internal.RE;
+import com.sun.org.apache.regexp.internal.RESyntaxException;
 import org.junit.Before;
 import org.bantu.*;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -524,7 +524,120 @@ public class BasicApplicationTests {
     }
 
 
+    @Test
+    public void WindowMustBeFetchedFromNavigationCache(){
 
+        NavigationCache navigationCache = new NavigationCache() {
+
+            private Map<String,Window> items = new HashMap<String, Window>();
+
+            public void storeWindow(Window window, USSDRequest request, USSDSession session) {
+
+                items.put(window.getId(),window);
+
+            }
+
+            public Window fetchWindow(String windowId, USSDRequest request, USSDSession session) {
+
+                return items.get(windowId);
+
+            }
+        };
+
+        USSDApplication application = new BaseUSSDApplication();
+        application.setNavigationCache(navigationCache);
+
+        Window thanksWindow = new Window("thanks");
+        thanksWindow.addMessage(new Message("Thanks your for picking a name"));
+        application.addWindow(thanksWindow);
+
+
+        Window exampleWindow = new Window("exampleWindow");
+        exampleWindow.setInput(new Input.Builder().withName("value").build());
+        exampleWindow.addMessage(new Message("Please select a name"));
+        exampleWindow.addMenuItem(new MenuItem.Builder().withValue("Yman").withIndex("10").withTargetWindow("thanks").build());
+        exampleWindow.addMenuItem(new MenuItem.Builder().withValue("Mario").withIndex("0").build());
+        exampleWindow.addMenuItem(new MenuItem.Builder().withValue("Benjamin").withIndex("20").build());
+        navigationCache.storeWindow(exampleWindow,null,null);
+
+
+        application.setStartupWindowId("exampleWindow");
+        USSDRequest request = application.newRequest("10");
+        fillRequest(request);
+        USSDResponse response = BantU.executeRequest(application,request);
+        assertEquals("thanks",response.getWindow().getId());
+        assertEquals(thanksWindow,response.getWindow());
+
+    }
+
+    @Test
+    public void WindowMustBeStoredInNavigationCache(){
+
+       final Map<String,Window> items = new HashMap<String, Window>();
+
+        NavigationCache navigationCache = new NavigationCache() {
+
+            public void storeWindow(Window window, USSDRequest request, USSDSession session) {
+
+                items.put(window.getId(),window);
+
+            }
+
+            public Window fetchWindow(String windowId, USSDRequest request, USSDSession session) {
+
+                return null;
+
+            }
+        };
+
+        USSDApplication application = new BaseUSSDApplication();
+        application.setNavigationCache(navigationCache);
+
+        Window thanksWindow = new Window("thanks");
+        thanksWindow.addMessage(new Message("Thanks your for picking a name"));
+        thanksWindow.setInput(new Input.Builder().withName("type").build());
+        application.addWindow(thanksWindow);
+
+
+        Window exampleWindow = new Window("exampleWindow");
+        exampleWindow.setInput(new Input.Builder().withName("value").build());
+        exampleWindow.addMessage(new Message("Please select a name"));
+        exampleWindow.addMenuItem(new MenuItem.Builder().withValue("Yman").withTargetWindow("thanks").build());
+        exampleWindow.addMenuItem(new MenuItem.Builder().withValue("Mario").build());
+        exampleWindow.addMenuItem(new MenuItem.Builder().withValue("Benjamin").build());
+        application.addWindow(exampleWindow);
+
+        application.setStartupWindowId("exampleWindow");
+        USSDRequest request = application.newRequest("1");
+        fillRequest(request);
+        BantU.executeRequest(application,request);
+        assertTrue(items.containsKey("thanks"));
+
+    }
+
+
+    @Test(expected = WindowFetchFailedException.class)
+    public void FetchWindowFromNavigationCacheMustFail(){
+
+
+
+    }
+
+    @Test(expected = WindowStoreFailedException.class)
+    public void StoredWindowInNavigationCacheMustFail(){
+
+
+
+    }
+
+
+    @Test
+    public void SessionMustBeTerminatedIfUSSDResponseIsMessage(){
+
+
+
+
+    }
 
 
 
@@ -539,7 +652,7 @@ public class BasicApplicationTests {
     private void fillRequest(USSDRequest request){
 
         request.setMSISDN("+258842538083");
-        //TODO: Set more stuff
+        //TODO: Set more stuff here
 
 
     }

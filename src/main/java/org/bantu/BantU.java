@@ -101,6 +101,33 @@ public class BantU {
         }
 
 
+
+        if(ussdResponse.getResponseType()==ResponseType.FORM){
+
+            //Persist the window in the NavigationCache
+            NavigationCache navigationCache = application.getNavigationCache();
+            if(navigationCache!=null){
+
+                try {
+
+                    navigationCache.storeWindow(ussdResponse.getWindow(), request, session);
+
+                }catch (Exception ex){
+
+                    throw new WindowStoreFailedException(ussdResponse.getWindow().getId(),request,ussdResponse,session);
+
+                }
+
+            }
+
+        }else{
+
+
+            //Terminate the session
+            ussdSession.close();
+
+        }
+
         //Return the produced USSDResponse
         return ussdResponse;
 

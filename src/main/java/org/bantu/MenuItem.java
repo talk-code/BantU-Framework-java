@@ -68,6 +68,13 @@ public class MenuItem extends AbstractRenderableItem {
 
         }
 
+        public Builder withIndex(String index){
+
+            menuItem.index = index;
+            return this;
+
+        }
+
         public MenuItem build(){
 
             return menuItem;

@@ -12,6 +12,21 @@ public class CoreFilter implements USSDFilter {
 
     private static final String BACKWARD_TARGET_WINDOW="#backward";
 
+    private enum  WindowSource {
+
+        NAVIGATION_CACHE,
+        APPLICATION_INSTANCE
+
+    };
+
+    private class WindowResult{
+
+        public Window window;
+        public WindowSource source;
+
+    }
+
+
     public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain chain) {
 
 
@@ -29,7 +44,22 @@ public class CoreFilter implements USSDFilter {
 
 
         final String currentWindowName = cWName;
-        currentWindow = request.getApplication().getWindow(currentWindowName);
+        WindowResult result = getWindow(currentWindowName,request,session,response);
+        currentWindow =  result.window;
+
+
+        //Window was restored from navigation cache
+        if(result.source==WindowSource.NAVIGATION_CACHE){
+
+            proceedProcessing(request,session,response, currentWindowName, currentWindow);
+            return;
+
+        }
+
+        //WINDOW WAS FETCHED DIRECTLY FROM APPLICATION INSTANCE
+
+        //Execute menu Items providers
+        getMenuItemsFromProviders(currentWindow,request,session);
 
         List<USSDFilter> windowFilters =  request.getApplication().getWindowFilters(session.getCurrentWindow());
         if(windowFilters.size()>0){
@@ -43,6 +73,8 @@ public class CoreFilter implements USSDFilter {
 
                 public void doFilter(USSDRequest request, USSDSession session, USSDResponse response, USSDFilteringChain execution) {
 
+                    //Index each of the non indexed menu items
+                    BantU.getMenuIndexer().index(currentWindow.getMenuItems());
                     proceedProcessing(request,session,response,currentWindowName,currentWindow);
 
                 }
@@ -55,10 +87,48 @@ public class CoreFilter implements USSDFilter {
 
         }
 
+        //Index each of the non indexed menu items
+        BantU.getMenuIndexer().index(currentWindow.getMenuItems());
         proceedProcessing(request,session,response, currentWindowName, currentWindow);
 
-        session.saveSession();//Session will always be persisted
+    }
 
+
+    private WindowResult getWindow(String name,USSDRequest request,
+                                   USSDSession session, USSDResponse response){
+
+        WindowResult windowResult = new WindowResult();
+
+        if(request instanceof PostRequest) {
+
+            NavigationCache navigationCache = request.getApplication().getNavigationCache();
+            if (navigationCache != null) {
+
+                try {
+
+                    windowResult.window = navigationCache.fetchWindow(name, request, session);
+                    windowResult.source = WindowSource.NAVIGATION_CACHE;
+
+                } catch (Exception ex) {
+
+                    throw new WindowFetchFailedException(name, request, response, session);
+
+                }
+
+            }
+        }
+
+        if(windowResult.window==null) {
+
+            windowResult.window = request.getApplication().getWindow(name);
+            windowResult.source = WindowSource.APPLICATION_INSTANCE;
+
+        }
+
+        if(windowResult.window==null)
+            throw new WindowNotFoundException(name,request,response,session);
+
+        return windowResult;
 
     }
 
@@ -69,12 +139,6 @@ public class CoreFilter implements USSDFilter {
         if(currentWindow==null)
             throw new WindowNotFoundException(currentWindowName,request,response,session);
 
-
-        //Execute menu providers
-        getMenuItemsFromProviders(currentWindow,request,session);
-
-        //Index each of the non indexed menu items
-        BantU.getMenuIndexer().index(currentWindow.getMenuItems());
 
         //response.setSession(session);
         response.setWindow(currentWindow);
@@ -116,7 +180,6 @@ public class CoreFilter implements USSDFilter {
         }
 
 
-
         session.saveSession();//Session will always be persisted
 
 
@@ -151,6 +214,9 @@ public class CoreFilter implements USSDFilter {
         String value = request.getInputValue();
         session.put(input.getName(),value);
 
+        session.saveSession();
+
+
         if(currentWindow.getInput().getRegexp()!=null){
 
             boolean matches = regularExpressionMatches(input.getRegexp(),value, request);
@@ -180,8 +246,13 @@ public class CoreFilter implements USSDFilter {
             if(menuItem.getIndex().equals(request.getInputValue())){
 
                 //Take the menu item's value and put in session
-                if(currentWindow.getMenuValueName()!=null)
+                if(currentWindow.getMenuValueName()!=null) {
+
                     session.put(currentWindow.getMenuValueName(), menuItem.getValue());
+                    session.saveSession();
+
+
+                }
 
 
                 if(menuItem.getTargetWindow()!=null) {
